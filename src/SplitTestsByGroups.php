@@ -1,4 +1,5 @@
 <?php
+
 namespace Codeception\Task;
 
 use Codeception\Test\Descriptor as TestDescriptor;
@@ -83,7 +84,8 @@ abstract class TestsSplitter extends BaseTask
      *
      * @return array
      */
-    protected function resolveDependencies($item, array $items, array $resolved, array $unresolved) {
+    protected function resolveDependencies($item, array $items, array $resolved, array $unresolved)
+    {
         $unresolved[] = $item;
         foreach ($items[$item] as $dep) {
             if (!in_array($dep, $resolved)) {
@@ -114,7 +116,8 @@ abstract class TestsSplitter extends BaseTask
      *
      * @return array
      */
-    protected function resolveDependenciesToFullNames(array $testsListWithDependencies){
+    protected function resolveDependenciesToFullNames(array $testsListWithDependencies)
+    {
         // make sure that dependencies are in array as full names
         foreach ($testsListWithDependencies as $testName => $test) {
             foreach ($test as $i => $dependency) {
@@ -125,7 +128,7 @@ abstract class TestsSplitter extends BaseTask
 
                 // just test name, that means that class name is the same, just different method name
                 if (strrpos($dependency, ':') === false) {
-                    $testsListWithDependencies[$testName][$i] = trim(substr($testName,0,strrpos($testName, ':')), ':') . ':' . $dependency;
+                    $testsListWithDependencies[$testName][$i] = trim(substr($testName, 0, strrpos($testName, ':')), ':') . ':' . $dependency;
                     continue;
                 }
                 $dependency = str_replace('::', ':', $dependency);
@@ -140,7 +143,7 @@ abstract class TestsSplitter extends BaseTask
                         continue 2;
                     }
                 }
-                throw new \RuntimeException('Dependency target test '.$dependency.' not found. Please make sure test exists and you are using full test name');
+                throw new \RuntimeException('Dependency target test ' . $dependency . ' not found. Please make sure test exists and you are using full test name');
             }
         }
         return $testsListWithDependencies;
@@ -185,22 +188,22 @@ class SplitTestsByGroupsTask extends TestsSplitter implements TaskInterface
 
             // load dependencies for cest type. Unit tests dependencies are loaded automatically
             if ($test instanceof \Codeception\Test\Cest) {
-                $test->getMetadata()->setServices(['di'=>$di]);
+                $test->getMetadata()->setServices(['di' => $di]);
                 $test->preload();
             }
 
             if (method_exists($test, 'getMetadata')) {
                 $testsListWithDependencies[TestDescriptor::getTestFullName($test)] = $test->getMetadata()
-                                                                                          ->getDependencies();
+                    ->getDependencies();
                 if ($testsHaveAtLeastOneDependency === false and count($test->getMetadata()->getDependencies()) != 0) {
                     $testsHaveAtLeastOneDependency = true;
                 }
 
-            // little hack to get dependencies from phpunit test cases that are private.
+                // little hack to get dependencies from phpunit test cases that are private.
             } elseif ($test instanceof \PHPUnit\Framework\TestCase) {
                 $ref = new \ReflectionObject($test);
                 do {
-                    try{
+                    try {
                         $property = $ref->getProperty('dependencies');
                         $property->setAccessible(true);
                         $testsListWithDependencies[TestDescriptor::getTestFullName($test)] = $property->getValue($test);
@@ -208,17 +211,15 @@ class SplitTestsByGroupsTask extends TestsSplitter implements TaskInterface
                         if ($testsHaveAtLeastOneDependency === false and count($property->getValue($test)) != 0) {
                             $testsHaveAtLeastOneDependency = true;
                         }
-
                     } catch (\ReflectionException $e) {
                         // go up on level on inheritance chain.
                     }
-                } while($ref = $ref->getParentClass());
-
+                } while ($ref = $ref->getParentClass());
             } else {
                 $testsListWithDependencies[TestDescriptor::getTestFullName($test)] = [];
             }
         }
-        
+
         if ($testsHaveAtLeastOneDependency) {
             $this->printTaskInfo('Resolving test dependencies');
 
@@ -229,7 +230,7 @@ class SplitTestsByGroupsTask extends TestsSplitter implements TaskInterface
                 $this->printTaskError($e->getMessage());
                 return false;
             }
-            
+
             // resolved and ordered list of dependencies
             $orderedListOfTests = [];
             // helper array
@@ -238,14 +239,14 @@ class SplitTestsByGroupsTask extends TestsSplitter implements TaskInterface
             // Resolve dependencies for each test
             foreach (array_keys($testsListWithDependencies) as $test) {
                 try {
-                    list ($orderedListOfTests, $unresolved) = $this->resolveDependencies($test, $testsListWithDependencies, $orderedListOfTests, $unresolved);
+                    list($orderedListOfTests, $unresolved) = $this->resolveDependencies($test, $testsListWithDependencies, $orderedListOfTests, $unresolved);
                 } catch (\Exception $e) {
                     $this->printTaskError($e->getMessage());
                     return false;
                 }
             }
 
-        // if we don't have any dependencies just use keys from original list.
+            // if we don't have any dependencies just use keys from original list.
         } else {
             $orderedListOfTests = array_keys($testsListWithDependencies);
         }
@@ -260,13 +261,13 @@ class SplitTestsByGroupsTask extends TestsSplitter implements TaskInterface
         foreach ($orderedListOfTests as $test) {
             // move to the next group ONLY if number of tests is equal or greater desired number of tests in group
             // AND current test has no dependencies AKA: we  are in different branch than previous test
-            if (!empty($groups[$i]) AND count($groups[$i]) >= $numberOfElementsInGroup AND $i <= ($this->numGroups-1) AND empty($testsListWithDependencies[$test])) {
+            if (!empty($groups[$i]) and count($groups[$i]) >= $numberOfElementsInGroup and $i <= ($this->numGroups - 1) and empty($testsListWithDependencies[$test])) {
                 $i++;
             }
 
             $groups[$i][] = $test;
         }
-        
+
         // saving group files
         foreach ($groups as $i => $tests) {
             $filename = $this->saveTo . $i;

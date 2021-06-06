@@ -1,11 +1,11 @@
 {
-    "name": "codeception/robo-paracept",
+    "name": "paper-co/robo-paracept",
     "description": "Codeception Parallel Execution Tasks via Robo Task Runner",
     "license": "MIT",
     "authors": [
         {
-            "name": "Davert",
-            "email": "davert@codeception.com"
+            "name": "Tien Nhan",
+            "email": "tien@paper.co"
         }
     ],
     "autoload":{
@@ -14,10 +14,9 @@
         }
     },
     "require": {
-        "consolidation/robo": "^1.0.0"
+        "consolidation/robo": "^3.0"
     },
     "require-dev": {
-        "codeception/base": "^2.2",
-        "codeception/codeception": "^2.2"
+        "codeception/codeception": "^4.0"
     }
 }
